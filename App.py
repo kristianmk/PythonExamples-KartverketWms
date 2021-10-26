@@ -14,9 +14,10 @@
 #
 from io import BytesIO
 
-import numpy
+import numpy as np
 import requests
 from PIL import Image
+
 
 
 # This is directly the API call used by Geonorge here:
@@ -43,12 +44,11 @@ response = requests.get(request_url, verify=True)  # SSL Cert verification expli
 print(f"HTTP response status code = {response.status_code}")
 
 img = Image.open(BytesIO(response.content))
-np_img = numpy.asarray(img)
+np_img = np.asarray(img)
 # Could do something with numpy here.
-im = Image.fromarray(numpy.uint8(np_img))
+img = Image.fromarray(np.uint8(np_img))
 img.show()
 
 # Could convert to STL here.
-
 
 
