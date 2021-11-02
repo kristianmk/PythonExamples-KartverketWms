@@ -18,7 +18,7 @@ import numpy as np
 import requests
 from PIL import Image
 
-from pyproj import Transformer
+
 
 def import_lat():
     print('Please input desired latitude within Norway')
