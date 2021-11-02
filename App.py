@@ -18,7 +18,7 @@ import numpy as np
 import requests
 from PIL import Image
 
-from pyproj import Transformer
+#from pyproj import Transformer
 
 def import_lat():
     print('Please input desired latitude within Norway')
@@ -45,15 +45,14 @@ def import_lon():
 
     return lon
 
-
 lat = import_lat()
 lon = import_lon()
 
-sq = 32                                    #This controls size of printout area, sq is side of square in kilometers
+sq = 33                                   #This controls size of printout area, sq is side of square in kilometers
 corner_const = 90*sq/22000
 
-#lat = 16.8                                #Example input values for debugging purposes - Remove before final release
-#lon = 68.55                               #Example input values for debugging purposes - Remove before final release
+# lat = 16.8                                #Example input values for debugging purposes - Remove before final release
+# lon = 68.55                               #Example input values for debugging purposes - Remove before final release
 
 BBX = [lon - corner_const * 2, lon + corner_const * 2]
 BBY = [lat - corner_const, lat + corner_const]
@@ -90,6 +89,72 @@ np_img = np.asarray(img)
 img = Image.fromarray(np.uint8(np_img))
 img.show()
 
-# Could convert to STL here.
+import numpy as np
+import numpy as np
+from stl import mesh
+# Define the 4 vertices of the surface
+
+from PIL import Image
+import matplotlib.pyplot as plt
+grey_img = img.convert('L')
+grey_img.show()
+print(grey_img.size)
+
+max_size=(500,500)
+max_height=10
+min_height=0
+#height=0 for minpix
+#height=maxheight for maxpix
+
+#resize
+grey_img.thumbnail(max_size)
+imageNP= np.array(grey_img)
+maxPix = imageNP.max()
+minPix = imageNP.min()
+
+
+print(imageNP)
+(ncols,nrows)=grey_img.size
+
+verticies=np.zeros((nrows,ncols,3))
+
+for x in range(0,ncols):
+    for y in range(0,nrows):
+        pixelIntensity= imageNP[y][x]
+        z = (pixelIntensity * max_height) / maxPix
+        #coordinates
+        verticies[y][x]=(x,y,z)
+faces=[]
+
+for x in range(0, ncols-1):
+  for y in range(0, nrows-1):
+
+       #create face1
+    vertice1=verticies[y][x]
+    vertice2=verticies[y+1][x]
+    vertice3=verticies[y+1][x+1]
+    face1=np.array([vertice1,vertice2,vertice3])
+       #create face 2
+    vertice1 = verticies[y][x]
+    vertice2 = verticies[y][x+1]
+    vertice3 = verticies[y+1][x+1]
+
+    face2 = np.array([vertice1, vertice2, vertice3])
+
+    faces.append(face1)
+    faces.append(face2)
+print(f"numberof faces:{len(faces)}")
+
+facesNP= np.array(faces)
+# Create the mesh
+surface = mesh.Mesh(np.zeros(facesNP.shape[0], dtype=mesh.Mesh.dtype))
+for i, f in enumerate(faces):
+    for j in range(3):
+        surface.vectors[i][j] = facesNP[i][j]
+# Write the mesh to file "cube.stl"
+surface.save('surface.stl')
+print(surface)
+
+
 
 
