@@ -45,49 +45,62 @@ def import_lon():
 
     return lon
 
-lat = import_lat()
-lon = import_lon()
+# lat = import_lat()
+# lon = import_lon()
 
 sq = 33                                   #This controls size of printout area, sq is side of square in kilometers
 corner_const = 90*sq/22000
 
-# lat = 16.8                                #Example input values for debugging purposes - Remove before final release
-# lon = 68.55                               #Example input values for debugging purposes - Remove before final release
 
-BBX = [lon - corner_const * 2, lon + corner_const * 2]
-BBY = [lat - corner_const, lat + corner_const]
+def get_image(lat, lon):
 
-#transformer = Transformer.from_crs('WGS84', 'EPSG:25833')
-#BBOX_X, BBOX_Y = transformer.transform(BBX, BBY)
+    BBX = [lon - corner_const * 2, lon + corner_const * 2]
+    BBY = [lat - corner_const, lat + corner_const]
 
-# This is directly the API call used by Geonorge here:
-# https://kartkatalog.geonorge.no/kart?lat=6882011.719407242&lon=68429.52888256384&zoom=8.589318931685455
-# .. when adding the "Digital overflatemodell WMS layer".
-# For use in an application, please see requests user manual: https://docs.python-requests.org/en/latest/
-# See the following examples on how to handle http request parameters / payload and so on:
-# https://docs.python-requests.org/en/latest/user/quickstart/#passing-parameters-in-urls
-request_url = 'https://wms.geonorge.no/skwms1/wms.hoyde-dom?' \
-           'SERVICE=WMS&' \
-           'VERSION=1.3.0&' \
-           'REQUEST=GetMap&' \
-           'FORMAT=image/png&' \
-           'TRANSPARENT=false&' \
-           'LAYERS=DOM:None&' \
-           'CRS=EPSG:4326&' \
-           'STYLES=&' \
-           'WIDTH=1080&' \
-           'HEIGHT=1080&' \
-           f'BBOX={BBX[0]},{BBY[0]},{BBX[1]},{BBY[1]},'
+    # transformer = Transformer.from_crs('WGS84', 'EPSG:25833')
+    # BBOX_X, BBOX_Y = transformer.transform(BBX, BBY)
+
+    # This is directly the API call used by Geonorge here:
+    # https://kartkatalog.geonorge.no/kart?lat=6882011.719407242&lon=68429.52888256384&zoom=8.589318931685455
+    # .. when adding the "Digital overflatemodell WMS layer".
+    # For use in an application, please see requests user manual: https://docs.python-requests.org/en/latest/
+    # See the following examples on how to handle http request parameters / payload and so on:
+    # https://docs.python-requests.org/en/latest/user/quickstart/#passing-parameters-in-urls
+    request_url = 'https://wms.geonorge.no/skwms1/wms.hoyde-dom?' \
+                  'SERVICE=WMS&' \
+                  'VERSION=1.3.0&' \
+                  'REQUEST=GetMap&' \
+                  'FORMAT=image/png&' \
+                  'TRANSPARENT=false&' \
+                  'LAYERS=DOM:None&' \
+                  'CRS=EPSG:4326&' \
+                  'STYLES=&' \
+                  'WIDTH=1080&' \
+                  'HEIGHT=1080&' \
+                  f'BBOX={BBX[0]},{BBY[0]},{BBX[1]},{BBY[1]},'
+    response = requests.get(request_url,
+                            verify=True)  # SSL Cert verification explicitly enabled. (This is also default.)
+    print(f"HTTP response status code = {response.status_code}")
+
+    img = Image.open(BytesIO(response.content))
+    np_img = np.asarray(img)
+    # Could do something with numpy here.
+    img = Image.fromarray(np.uint8(np_img))
+    img.show()
+    return  img
+
+# Crete the image class based x = lat , y = lon, get_image funtion that gets image based on x and y
+class MyImage:
+  def __init__(self, x, y):
+    self.x = x
+    self.y = y
+    self.img = get_image(x,y)
 
 
-response = requests.get(request_url, verify=True)  # SSL Cert verification explicitly enabled. (This is also default.)
-print(f"HTTP response status code = {response.status_code}")
+first_image = MyImage(import_lat(), import_lon())
 
-img = Image.open(BytesIO(response.content))
-np_img = np.asarray(img)
-# Could do something with numpy here.
-img = Image.fromarray(np.uint8(np_img))
-img.show()
+
+
 
 import numpy as np
 import numpy as np
@@ -96,6 +109,7 @@ from stl import mesh
 
 from PIL import Image
 import matplotlib.pyplot as plt
+img = first_image.img
 grey_img = img.convert('L')
 grey_img.show()
 print(grey_img.size)
@@ -154,6 +168,18 @@ for i, f in enumerate(faces):
 # Write the mesh to file "cube.stl"
 surface.save('surface.stl')
 print(surface)
+
+
+
+
+
+
+
+
+
+# lat = 16.8                                #Example input values for debugging purposes - Remove before final release
+# lon = 68.55                               #Example input values for debugging purposes - Remove before final release
+
 
 
 
